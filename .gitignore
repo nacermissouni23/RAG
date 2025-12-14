@@ -8,3 +8,20 @@ bash
 tmp*
 real_config*
 logs/*
+
+# Virtual Environments
+venv/
+env/
+.venv/
+penv/
+
+# Python cache and compiled files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Build and distribution artifacts
+dist/
+build/
+*.egg-info/
