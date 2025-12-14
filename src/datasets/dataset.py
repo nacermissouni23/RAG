@@ -31,7 +31,7 @@ class OHRBench(BaseDataset):
 
 def get_task_datasets(path: str, task: str, shuffle: bool = False, seed: int = 22):
     if os.path.isfile(path):
-        with open(path) as f:
+        with open(path, "r", encoding="utf-8-sig") as f:
             data = json.load(f)
     
     return [OHRBench(data, shuffle, seed)]

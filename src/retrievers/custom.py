@@ -12,7 +12,7 @@ from langchain.schema.embeddings import Embeddings
 from src.retrievers.json_reader import PCJSONReader
 
 def construct_retriever(docs_directory, embed_model=None, chunk_size=128, chunk_overlap=0, similarity_top_k=2):
-    documents = SimpleDirectoryReader(docs_directory, file_extractor={".json": PCJSONReader()}, recursive=True).load_data(num_workers=8)
+    documents = SimpleDirectoryReader(docs_directory, file_extractor={".json": PCJSONReader()}, recursive=True, required_exts=[".json"]).load_data(num_workers=8)
     node_parser = SimpleNodeParser.from_defaults(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
     nodes = node_parser.get_nodes_from_documents(documents, show_progress=True, num_workers=8)
     

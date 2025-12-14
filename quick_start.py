@@ -3,7 +3,7 @@ from loguru import logger
 from src.datasets.dataset import get_task_datasets
 from evaluator import StageEvaluator
 from src.llms import GPT
-from src.llms import Qwen2_7B_Instruct, LLaMA31_8B_Instruct, Qwen25_7B_Instruct, Qwen2VL_7B_Instruct, InternVL2_8B_Instruct
+#from src.llms import Qwen2_7B_Instruct, LLaMA31_8B_Instruct, Qwen25_7B_Instruct, Qwen2VL_7B_Instruct, InternVL2_8B_Instruct
 from src.llms import Mock
 
 from src.tasks.quest_answer import QuestAnswer, QuestAnswer_image, QuestAnswer_OCR, QuestAnswer_image_OCR
@@ -37,90 +37,72 @@ parser.add_argument('--contain_original_data', action='store_true', help="Whethe
 
 parser.add_argument('--evaluation_stage', default='generation', choices=['retrieval', 'generation', 'end2end'], help="Which stage to be evaluated in RAG")
 
-args = parser.parse_args()
-logger.info(args)
+if __name__ == "__main__":
+    args = parser.parse_args()
+    logger.info(args)
 
-def setup_seed(seed):
-    import torch
-    import numpy as np
-    import random
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
-    np.random.seed(seed)
-    random.seed(seed)
-    torch.backends.cudnn.deterministic = True
+    def setup_seed(seed):
+        import torch
+        import numpy as np
+        import random
+        torch.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+        np.random.seed(seed)
+        random.seed(seed)
+        torch.backends.cudnn.deterministic = True
 
-setup_seed(0)
+    setup_seed(0)
 
-if args.evaluation_stage == "retrieval":
-    assert args.retriever in ["bge-m3", "bm25"], f"The retriever {args.retriever} is not supported for stage {args.evaluation_stage}."
-    args.task = "Retrieval"
-    args.model_name = "mock"
-elif args.evaluation_stage == "generation":
-    assert args.model_name not in ["mock"], f"The model_name {args.model_name} is not supported for stage {args.evaluation_stage}."
-    assert args.task in ["QA", "QA_image", "QA_OCR", "QA_image_OCR"], f"The task {args.task} is not supported for stage {args.evaluation_stage}."
-    args.retriever = "page"
-elif args.evaluation_stage == "end2end":
-    assert args.retriever in ["bge-m3", "bm25"], f"The retriever {args.retriever} is not supported for stage {args.evaluation_stage}."
-    assert args.task in ["QA", "QA_image", "QA_OCR", "QA_image_OCR"], f"The task {args.task} is not supported for stage {args.evaluation_stage}."
+    if args.evaluation_stage == "retrieval":
+        assert args.retriever in ["bge-m3", "bm25"], f"The retriever {args.retriever} is not supported for stage {args.evaluation_stage}."
+        args.task = "Retrieval"
+        args.model_name = "mock"
+    elif args.evaluation_stage == "generation":
+        assert args.model_name not in ["mock"], f"The model_name {args.model_name} is not supported for stage {args.evaluation_stage}."
+        assert args.task in ["QA", "QA_image", "QA_OCR", "QA_image_OCR"], f"The task {args.task} is not supported for stage {args.evaluation_stage}."
+        args.retriever = "page"
+    elif args.evaluation_stage == "end2end":
+        assert args.retriever in ["bge-m3", "bm25"], f"The retriever {args.retriever} is not supported for stage {args.evaluation_stage}."
+        assert args.task in ["QA", "QA_image", "QA_OCR", "QA_image_OCR"], f"The task {args.task} is not supported for stage {args.evaluation_stage}."
 
-
-if args.model_name.startswith("gpt"):
-    llm = GPT(model_name=args.model_name, temperature=args.temperature, max_new_tokens=args.max_new_tokens)
-elif args.model_name == "qwen2_7b":
-    llm = Qwen2_7B_Instruct(model_name=args.model_name, temperature=args.temperature, max_new_tokens=args.max_new_tokens,
-                            top_p=0.8, top_k=10)
-elif args.model_name == "qwen25_7b":
-    llm = Qwen25_7B_Instruct(model_name=args.model_name, temperature=args.temperature, max_new_tokens=args.max_new_tokens,
-                            top_p=0.8, top_k=10)
-elif args.model_name == "llama3.1_8b":
-    llm = LLaMA31_8B_Instruct(model_name=args.model_name, temperature=args.temperature, max_new_tokens=args.max_new_tokens,
-                            top_p=0.8, top_k=10)
-elif args.model_name == "qwen2vl_7b":
-    llm = Qwen2VL_7B_Instruct(model_name=args.model_name, temperature=args.temperature, max_new_tokens=args.max_new_tokens,
-                            top_p=0.8, top_k=10)
-elif args.model_name == "internvl2_8b":
-    llm = InternVL2_8B_Instruct(model_name=args.model_name, temperature=args.temperature, max_new_tokens=args.max_new_tokens,
-                            top_p=0.8, top_k=10)
-elif args.model_name == "mock":
     llm = Mock()
 
-if args.retriever == "bge-m3":
-    embed_model = HuggingfaceEmbeddings(model_name="BAAI/bge-m3")
-    retriever = CustomBGEM3Retriever(
-        args.docs_path, embed_model=embed_model, embed_dim=1024,
-        chunk_size=1024, chunk_overlap=0, similarity_top_k=args.retrieve_top_k
-    )
-elif args.retriever == "bm25":
-    retriever = CustomBM25Retriever(
-        args.docs_path, chunk_size=1024, chunk_overlap=0, similarity_top_k=args.retrieve_top_k
-    )
-elif args.retriever == "page":
-    retriever = CustomPageRetriever(
-        args.docs_path
-    )
-else:
-    raise NotImplementedError()
+    if args.retriever == "bge-m3":
+        embed_model = HuggingfaceEmbeddings(model_name="BAAI/bge-m3")
+        retriever = CustomBGEM3Retriever(
+            args.docs_path, embed_model=embed_model, embed_dim=1024,
+            chunk_size=1024, chunk_overlap=0, similarity_top_k=args.retrieve_top_k
+        )
+    elif args.retriever == "bm25":
+        retriever = CustomBM25Retriever(
+            args.docs_path, chunk_size=1024, chunk_overlap=0, similarity_top_k=args.retrieve_top_k
+        )
+    elif args.retriever == "page":
+        retriever = CustomPageRetriever(
+            args.docs_path
+        )
+    else:
+        raise NotImplementedError()
 
-task_mapping = {
-    'QA': [QuestAnswer],
-    'QA_image': [QuestAnswer_image],
-    'QA_OCR': [QuestAnswer_OCR],
-    'QA_image_OCR': [QuestAnswer_image_OCR],
-    'Retrieval': [RetrievalTask],
-}
+    task_mapping = {
+        'QA': [QuestAnswer],
+        'QA_image': [QuestAnswer_image],
+        'QA_OCR': [QuestAnswer_OCR],
+        'QA_image_OCR': [QuestAnswer_image_OCR],
+        'Retrieval': [RetrievalTask],
+    }
 
-if args.task not in task_mapping:
-    raise ValueError(f"Unknown task: {args.task}")
+    if args.task not in task_mapping:
+        raise ValueError(f"Unknown task: {args.task}")
 
-tasks = [task() for task in task_mapping[args.task]]
+    tasks = [task() for task in task_mapping[args.task]]
 
-datasets = get_task_datasets(args.data_path, args.task)
+    datasets = get_task_datasets(args.data_path, args.task)
 
-for task, dataset in zip(tasks, datasets):
-    evaluator = StageEvaluator(task, llm, retriever, dataset, 
-                               output_dir=os.path.join(args.output_path, args.evaluation_stage,args.ocr_type),
-                               output_name="all",
-                               num_threads=args.num_threads,
-                               stage=args.evaluation_stage)
-    results = evaluator.run(show_progress_bar=args.show_progress_bar, contain_original_data=args.contain_original_data)
+    for task, dataset in zip(tasks, datasets):
+        evaluator = StageEvaluator(task, llm, retriever, dataset, 
+                                   output_dir=os.path.join(args.output_path, args.evaluation_stage,args.ocr_type),
+                                   output_name="all",
+                                   num_threads=args.num_threads,
+                                   stage=args.evaluation_stage)
+        results = evaluator.run(show_progress_bar=args.show_progress_bar, contain_original_data=args.contain_original_data)
