@@ -404,6 +404,8 @@ Qwen2_7B_local_path = 'Qwen/Qwen2-7B-Instruct' # download from Hugging Face or y
 # Run Evaluation
 To evaluate your OCR results, follow the instructions in the Dataset Preparation section to organize your OCR data.
 
+## Option 1: Using Shell Scripts (Command Line)
+
 ```bash
 # The first argument specifies which OCR results to use for evaluation.
 # The second argument specifies the retrievers or LLMs.
@@ -427,7 +429,28 @@ bash shell/end2end.sh gt bge-m3 qwen2_7b
 bash shell/end2end.sh semantic_noise_MinerU_severe bge-m3 qwen2_7b
 ```
 
-You can then use `exp_scripts/exp_show.ipynb` to view the results grouped by `domain` or `evidence_source`.
+## Option 2: Using Jupyter Notebook (Interactive)
+
+For an interactive retrieval evaluation experience with detailed visualizations, use the provided Jupyter Notebook:
+
+```bash
+jupyter notebook retrieval_notebook.ipynb
+```
+
+The notebook provides:
+- Easy-to-modify configuration parameters
+- Step-by-step execution with inline documentation
+- Comprehensive results visualization and analysis
+- Results grouped by evidence source and domain
+- Sample retrieval outputs for inspection
+
+See [NOTEBOOK_README.md](NOTEBOOK_README.md) for detailed notebook usage instructions.
+
+## Viewing Results
+
+You can view the results using either:
+- `exp_scripts/exp_show.ipynb` - View results grouped by `domain` or `evidence_source`
+- `retrieval_notebook.ipynb` - Interactive retrieval execution with built-in results visualization
 
 # Acknowledgement
 The evaluation framework is based on [CRUD](https://github.com/IAAR-Shanghai/CRUD_RAG), thanks so much for this brilliant project.
